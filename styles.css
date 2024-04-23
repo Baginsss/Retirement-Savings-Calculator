@@ -1,0 +1,89 @@
+body {
+    background-color: #fffff0;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    background-color: #fab94e;
+    padding: 10px;
+    text-align: left;
+    font-size: 20px;
+    color: #7b7b7b;
+}
+
+footer {
+    background-color: #fab94e;
+    padding: 5px;
+    text-align: center;
+    color: #7b7b7b;
+    margin-top: auto;
+}
+
+main {
+    padding: 20px;
+    flex: 1;
+}
+
+p {
+    font-size: 16px;
+    line-height: 1.5;
+    font-style: oblique;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#t1 {
+    background-color: #f0f0f0;
+}
+
+#t1 td, #t1 th {
+    padding: 8px;
+    text-align: left;
+}
+
+#t1 th {
+    background-color: #fab94e;
+    color: #7b7b7b;
+}
+
+#t1 td form {
+    display: flex;
+    align-items: center;
+}
+
+#t1 td input[type="number"],
+#t1 td input[type="text"],
+#t1 td input[type="button"] {
+    width: 16%;
+    padding: 8px;
+    margin-right: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+#t1 td input[type="button"] {
+    padding: 8px 20px;
+    width: auto;
+    cursor: pointer;
+    background-color: gold;
+    color: black;
+    border: none;
+}
+
+#t1 td label {
+    width: auto;
+    margin-right: 10px;
+}
+
+#tr1 {
+    text-align: center;
+    font-weight: bold;
+}
