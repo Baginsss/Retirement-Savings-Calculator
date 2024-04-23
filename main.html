@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="styles.css" rel="stylesheet">
+    <title>Retirement Savings Calculator</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+    <header>
+        <h3>Retirement Savings Calculator: Navigate the third pillar of the Polish Pension System</h3>
+    </header>
+    <main>
+        <p id="text1">In Poland, we have three pillars of the retirement system. Though the third pillar is optional for citizens, 
+            it offers multiple benefits such as an exception for capital gains tax on accumulated savings (IKE), reducing
+            your personal income tax (IKZE), but most importantly it allows you to take your retirement strategy into
+            your own hands.</p>
+        <table id="t1">
+            <form>
+                <tr id="tr1">
+                    <td></td>
+                    <td>Average Expected Result
+                        <p id="avg_res">- PLN</p>
+                    </td>
+                    <td>Expected Monthly Pension
+                        <p id="exp_pen">- PLN</p>
+                    </td>
+                    <td>Total amount of deposit
+                        <p id="total_dep">- PLN</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input name="age" id="age" type="number" max="60" min="1" placeholder="e.g. 26" required>
+                        <label for="age">Age</label>
+                    </td>
+                    <td rowspan="5" colspan="3">
+                        <svg id="chart" width="800" height="400"></svg>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input name="gender" id="gender" type="text" list="genderlist" placeholder="M/F" required>
+                        <label for="gender">Gender</label>
+                        <datalist id="genderlist">
+                            <option value="M">
+                            <option value="F">
+                        </datalist>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input name="b2b" id="b2b" type="text" list="b2blist" placeholder="Yes/No" required>
+                        <label for="b2b">Self-employed</label>
+                        <datalist id="b2blist">
+                            <option value="Yes">
+                            <option value="No">
+                        </datalist>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input name="savings" id="savings" type="number" max="9999999" min="1" placeholder="e.g. 1000" required>
+                        <label for="savings">Savings per month (in PLN)</label>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="button" value="Submit" id="subbtn" onclick="calculate()"><br>
+                    </td>
+                </tr>
+            </form>
+        </table>
+        <p>The calculator assumes a return rate of 7% per year but doesn't count inflation, so the outcome is in 
+            nominal value rather than real. It is based on the assumption of not de/increasing the amount of savings
+            per year and capitalising the interest till the retirement age of 60. 
+            IKE, IKZE, and OIPE have different limits of possible savings per year, so if you exceed the limit of IKE, then
+            the overflow will be counted as IKZE, and if you exceed the limit of IKZE, then the overflow will be counted for OIPE till 
+            the maximum limit. 
+        </p>
+    </main>
+    <footer>
+        <p>Created by: Mateusz Bagiński</p>
+    </footer>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById("subbtn").addEventListener("click", function(event)
+            {
+                event.preventDefault();
+                
+                if (validateInputs()) {
+                    calculate();
+                }
+            });
+        });
+
+        function validateInputs() {
+            var age = parseInt(document.getElementById('age').value);
+            var gender = document.getElementById("gender").value
+            var b2b = document.getElementById("b2b").value;
+            var savings = parseInt(document.getElementById('savings').value);
+
+            if (age < 1 || age > 60 || isNaN(age) || age === "") {
+                alert("Age must be between 1 and 60.");
+                return false;
+            }
+
+            if (gender.toUpperCase() !== "M" && gender.toUpperCase() !== "F") {
+                alert("Please enter M for male or F for female.")
+                return false;
+            }
+
+            if (b2b.toUpperCase() !== "YES" && b2b.toUpperCase() !== "NO") {
+                alert("Please enter Yes if you are self-employed or No if you are not.")
+                return false;
+            }
+
+            if (savings < 1 || isNaN(savings) || savings === "") {
+                alert("Savings must be a positive number.");
+                return false;
+            }
+
+            return true;
+        }
+
+        createChart([]);
+
+        function calculate() {
+            var age = parseInt(document.getElementById('age').value);
+            var gender = document.getElementById('gender').value;
+            var b2b = document.getElementById('b2b').value;
+            var savings = parseInt(document.getElementById('savings').value);
+
+            // Constants
+            var l_ike = 23472.00;
+            var l_ikze = 9388.80;
+            var l_ikzeb2b = 14083.20;
+            var l_oipe = 23472.00;
+
+            var m_dage = 73.4 - 60;
+            var f_dage = 81.1 - 60;
+
+            // Operations
+            var n = 60 - age;
+            var x = 12 * parseFloat(savings);
+
+            var l = l_ike + l_ikze + l_oipe;
+            var l_b2b = l_ike + l_ikzeb2b + l_oipe;
+
+            if (b2b.toUpperCase() === "YES") {
+                if (x > l_b2b) {
+                    x = l_b2b;
+                }
+            } else {
+                if (x > l) {
+                    x = l;
+                }
+            }
+
+            var x1 = x;
+
+            var total_dep = x * n;
+            document.getElementById('total_dep').innerHTML = total_dep.toFixed(2) + " PLN";
+
+            var avg_res;
+            var avg_res_arr = [];
+            for (var i = 0; i < n; i++) {
+                var temp = (x * 1.07) + x1;
+                x = temp;
+                avg_res_arr.push({age: age + i, savings: x});
+            }
+            document.getElementById('avg_res').innerHTML = x.toFixed(2) + " PLN";
+
+            var exp_pen;
+            if (gender.toUpperCase() === "M") {
+                exp_pen = (x / m_dage / 12).toFixed(2);
+            } else {
+                exp_pen = (x / f_dage / 12).toFixed(2);
+            }
+            document.getElementById('exp_pen').innerHTML = exp_pen + " PLN";
+
+            createChart(avg_res_arr);
+            return false; 
+        }
+
+        function createChart(data) {
+            d3.select("#chart").selectAll("*").remove();
+
+            var svg = d3.select("#chart");
+            var width = +svg.attr("width");
+            var height = +svg.attr("height");
+            var margin = { top: 20, right: 20, bottom: 30, left: 60 };
+            var chartWidth = width - margin.left - margin.right;
+            var chartHeight = height - margin.top - margin.bottom;
+
+            // Default values for empty chart
+            if (data.length === 0) {
+                data.push({ age: 0, savings: 0 });
+                data.push({ age: 60, savings: 0 });
+            }
+
+            var yMin = d3.min(data, function(d) { return d.savings; });
+            var yMax = d3.max(data, function(d) { return d.savings; });
+
+            // If yMin equals yMax, adjust the scale to give some padding
+            if (yMin === yMax) {
+                yMin = 0; // Decrease yMin by 100 (adjust as needed)
+                yMax += 1000000; // Increase yMax by 100 (adjust as needed)
+            }
+
+            var xScale = d3.scaleLinear()
+                .domain([data[0].age, data[data.length - 1].age])
+                .range([0, chartWidth]);
+
+            var yScale = d3.scaleLinear()
+                .domain([yMin, yMax]) // Set y-scale domain to adjusted values
+                .range([chartHeight, 0]);
+
+            var g = svg.append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            g.append("g")
+                .attr("transform", "translate(0," + chartHeight + ")")
+                .call(d3.axisBottom(xScale));
+
+            g.append("g")
+                .call(d3.axisLeft(yScale));
+
+            var line = d3.line()
+                .x(function(d) { return xScale(d.age); })
+                .y(function(d) { return yScale(d.savings); });
+
+            var path = g.append("path")
+                .datum(data)
+                .attr("fill", "none")
+                .attr("stroke", "steelblue")
+                .attr("stroke-linejoin", "round")
+                .attr("stroke-linecap", "round")
+                .attr("stroke-width", 1.5)
+                .attr("d", line([{ age: data[0].age, savings: 0 }, { age: data[0].age, savings: 0 }]));
+
+
+            path.transition()
+                .duration(1000) 
+                .attr("d", line(data));
+        }
+    </script>
+</body>
+</html>
